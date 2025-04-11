@@ -5,10 +5,561 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Summary Results</title>
     <link rel="stylesheet" href="/static/style.css">
-    <script type="module">
-        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
-        mermaid.initialize({ startOnLoad: true });
-    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        /* Dark theme base styles */
+        body {
+            background-color: #0a0a0f;
+            color: #e0e0e0;
+            font-family: 'Inter', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(74, 107, 255, 0.05) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(106, 17, 203, 0.05) 0%, transparent 20%);
+            background-attachment: fixed;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            color: #ffffff;
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, #ffffff, #b0b0ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 10px rgba(74, 107, 255, 0.2);
+        }
+        
+        h2 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 1.2rem;
+            color: #ffffff;
+            letter-spacing: -0.5px;
+        }
+        
+        h3 {
+            font-size: 1.7rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #ffffff;
+        }
+        
+        p {
+            font-size: 1.15rem;
+            margin-bottom: 1rem;
+            letter-spacing: 0.2px;
+        }
+        
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+            background-color: #12121a;
+            color: #e0e0e0;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        @media (max-width: 767px) {
+            .markdown-body {
+                padding: 15px;
+            }
+        }
+        
+        /* New styles for card-like structure */
+        .summary-card {
+            background-color: #12121a;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            margin-bottom: 30px;
+            overflow: hidden;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease;
+            border: 1px solid rgba(74, 107, 255, 0.1);
+            position: relative;
+        }
+        
+        .summary-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #4a6bff, #6a11cb);
+            opacity: 0.7;
+        }
+        
+        .summary-card:hover {
+            transform: translateY(-8px) scale(1.01);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(74, 107, 255, 0.2);
+        }
+        
+        .summary-card-header {
+            background: linear-gradient(135deg, #4a6bff, #6a11cb);
+            color: white;
+            padding: 22px 28px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            letter-spacing: 0.5px;
+        }
+        
+        .summary-card-header i {
+            margin-right: 15px;
+            font-size: 1.7rem;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .summary-card-content {
+            padding: 30px;
+        }
+        
+        .summary-card-content h1, 
+        .summary-card-content h2, 
+        .summary-card-content h3 {
+            color: #ffffff;
+            margin-top: 0;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        
+        .summary-card-content p {
+            line-height: 1.8;
+            color: #e0e0e0;
+            font-size: 1.2rem;
+            letter-spacing: 0.2px;
+        }
+        
+        .summary-card-content ul, 
+        .summary-card-content ol {
+            padding-left: 25px;
+            font-size: 1.15rem;
+        }
+        
+        .summary-card-content li {
+            margin-bottom: 12px;
+            line-height: 1.7;
+            position: relative;
+        }
+        
+        .summary-card-content li::before {
+            content: '•';
+            color: #4a6bff;
+            font-weight: bold;
+            display: inline-block;
+            width: 1em;
+            margin-left: -1em;
+        }
+        
+        .summary-card-content code {
+            background-color: #1a1a24;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-family: 'Fira Code', 'Consolas', monospace;
+            font-size: 1rem;
+            color: #e0e0e0;
+            border: 1px solid rgba(74, 107, 255, 0.2);
+        }
+        
+        .summary-card-content pre {
+            background-color: #1a1a24;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid rgba(74, 107, 255, 0.2);
+        }
+        
+        .summary-card-content blockquote {
+            border-left: 4px solid #4a6bff;
+            padding-left: 20px;
+            margin-left: 0;
+            color: #b0b0b0;
+            font-style: italic;
+            font-size: 1.15rem;
+            background-color: rgba(74, 107, 255, 0.05);
+            padding: 15px 20px;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .summary-card-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 1.15rem;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .summary-card-content th, 
+        .summary-card-content td {
+            border: 1px solid rgba(74, 107, 255, 0.2);
+            padding: 12px 15px;
+            text-align: left;
+        }
+        
+        .summary-card-content th {
+            background-color: #1a1a24;
+            color: #ffffff;
+            font-weight: 600;
+        }
+        
+        .summary-card-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            border: 1px solid rgba(74, 107, 255, 0.2);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .mermaid {
+            background-color: #1a1a24;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid rgba(74, 107, 255, 0.2);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Source info styling */
+        .source-info {
+            background-color: #1a1a24;
+            padding: 12px 18px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            font-size: 1.1rem;
+            color: #b0b0b0;
+            display: inline-block;
+            border: 1px solid rgba(74, 107, 255, 0.2);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .source-info:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+            border-color: rgba(74, 107, 255, 0.4);
+        }
+        
+        /* Section styling */
+        .section {
+            margin-bottom: 50px;
+            position: relative;
+        }
+        
+        .section h2 {
+            color: #706464ed;
+            border-bottom: 2px solid #4a6bff;
+            padding-bottom: 12px;
+            margin-bottom: 25px;
+            font-size: 2.4rem;
+            position: relative;
+            display: inline-block;
+        }
+        
+        .section h2::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 50px;
+            height: 2px;
+            background: linear-gradient(90deg, #4a6bff, transparent);
+        }
+        
+        /* Content box styling */
+        .content-box {
+            background-color: #12121a;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(74, 107, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .content-box:hover {
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(74, 107, 255, 0.2);
+        }
+        
+        .content-box textarea {
+            width: 100%;
+            min-height: 300px;
+            border: none;
+            background-color: transparent;
+            resize: vertical;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            line-height: 1.6;
+            color: #e0e0e0;
+            font-size: 1.1rem;
+        }
+        
+        /* Back button styling */
+        .back-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #4a6bff, #6a11cb);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 30px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(74, 107, 255, 0.3);
+            font-size: 1.2rem;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        
+        .back-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #6a11cb, #4a6bff);
+            z-index: -1;
+            transition: opacity 0.3s ease;
+            opacity: 0;
+        }
+        
+        .back-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(74, 107, 255, 0.4);
+        }
+        
+        .back-button:hover::before {
+            opacity: 1;
+        }
+        
+        /* Navbar styling */
+        .navbar {
+            background-color: rgba(10, 10, 15, 0.9);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(74, 107, 255, 0.1);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo img {
+            height: 40px;
+            margin-right: 15px;
+            filter: drop-shadow(0 2px 5px rgba(74, 107, 255, 0.3));
+        }
+        
+        .logo span {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: 0.5px;
+        }
+        
+        .nav-links a {
+            color: #e0e0e0;
+            text-decoration: none;
+            margin-left: 25px;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            position: relative;
+            padding: 5px 0;
+        }
+        
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #4a6bff, #6a11cb);
+            transition: width 0.3s ease;
+        }
+        
+        .nav-links a:hover {
+            color: #ffffff;
+        }
+        
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+        
+        /* Study Tips Popup */
+        .study-tips-popup {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background-color: #12121a;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(74, 107, 255, 0.1);
+            max-width: 350px;
+            z-index: 1000;
+            animation: slideIn 0.5s ease-out;
+            transition: all 0.3s ease;
+        }
+        
+        .study-tips-popup::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #4a6bff, #6a11cb);
+            opacity: 0.7;
+            border-radius: 16px 16px 0 0;
+        }
+        
+        .study-tips-popup:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(74, 107, 255, 0.2);
+        }
+        
+        .study-tips-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .study-tips-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+        }
+        
+        .study-tips-title i {
+            margin-right: 10px;
+            color: #4a6bff;
+        }
+        
+        .close-tips {
+            background: none;
+            border: none;
+            color: #b0b0b0;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: color 0.3s ease;
+        }
+        
+        .close-tips:hover {
+            color: #ffffff;
+        }
+        
+        .study-tips-content {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #e0e0e0;
+        }
+        
+        .study-tips-content p {
+            margin-bottom: 10px;
+        }
+        
+        .study-tips-content ul {
+            padding-left: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .study-tips-content li {
+            margin-bottom: 8px;
+            position: relative;
+        }
+        
+        .study-tips-content li::before {
+            content: '•';
+            color: #4a6bff;
+            font-weight: bold;
+            display: inline-block;
+            width: 1em;
+            margin-left: -1em;
+        }
+        
+        .study-tips-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(74, 107, 255, 0.1);
+        }
+        
+        .next-tip {
+            background: linear-gradient(135deg, #4a6bff, #6a11cb);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .next-tip:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(74, 107, 255, 0.3);
+        }
+        
+        .tip-counter {
+            font-size: 0.9rem;
+            color: #b0b0b0;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            h2 {
+                font-size: 2rem;
+            }
+            
+            .study-tips-popup {
+                bottom: 20px;
+                right: 20px;
+                left: 20px;
+                max-width: none;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="navbar">
@@ -30,8 +581,13 @@
         <div class="results-container">
             <div class="section">
                 <h2>Summary</h2>
-                <div class="content-box markdown-body">
-                    {{ summary | safe }}
+                <div class="summary-card">
+                    <div class="summary-card-header">
+                        <i class="fas fa-file-alt"></i> Key Insights
+                    </div>
+                    <div class="summary-card-content markdown-body" id="markdown-container">
+                        {{ summary | safe }}
+                    </div>
                 </div>
             </div>
             
@@ -44,6 +600,100 @@
         </div>
         
         <a href="{{ url_for('index') }}" class="back-button">Process Another</a>
+        
+        <!-- Study Tips Popup -->
+        <div class="study-tips-popup" id="study-tips-popup">
+            <div class="study-tips-header">
+                <div class="study-tips-title">
+                    <i class="fas fa-lightbulb"></i> Study Tip
+                </div>
+                <button class="close-tips" id="close-tips">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="study-tips-content" id="study-tips-content">
+                <p>Use the Pomodoro Technique: Study for 25 minutes, then take a 5-minute break. This helps maintain focus and prevent mental fatigue.</p>
+            </div>
+            <div class="study-tips-footer">
+                <button class="next-tip" id="next-tip">Next Tip</button>
+                <div class="tip-counter">Tip <span id="tip-number">1</span>/5</div>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Render Markdown
+                const container = document.getElementById('markdown-container');
+                const markdownContent = container.innerHTML;
+                
+                // Process mermaid diagrams first
+                const mermaidBlocks = markdownContent.match(/```mermaid[\s\S]*?```/g) || [];
+                mermaidBlocks.forEach((block, index) => {
+                    container.innerHTML = container.innerHTML.replace(
+                        block, 
+                        `<div class="mermaid" id="mermaid-${index}">${block.replace(/```mermaid|```/g, '')}</div>`
+                    );
+                });
+        
+                // Render remaining markdown
+                container.innerHTML = marked.parse(container.innerHTML);
+        
+                // Initialize Mermaid
+                mermaid.initialize({ 
+                    startOnLoad: true,
+                    theme: 'dark',
+                    securityLevel: 'loose'
+                });
+                mermaid.init();
+                
+                // Add Font Awesome for icons
+                const fontAwesome = document.createElement('link');
+                fontAwesome.rel = 'stylesheet';
+                fontAwesome.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css';
+                document.head.appendChild(fontAwesome);
+                
+                // Add Google Fonts
+                const googleFonts = document.createElement('link');
+                googleFonts.rel = 'stylesheet';
+                googleFonts.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code&display=swap';
+                document.head.appendChild(googleFonts);
+                
+                // Study Tips Functionality
+                const studyTips = [
+                    "Use the Pomodoro Technique: Study for 25 minutes, then take a 5-minute break. This helps maintain focus and prevent mental fatigue.",
+                    "Create mind maps to visualize connections between concepts. This helps with memory retention and understanding relationships.",
+                    "Teach what you've learned to someone else. Explaining concepts in your own words reinforces understanding.",
+                    "Review your notes within 24 hours of learning new material. This helps transfer information from short-term to long-term memory.",
+                    "Use spaced repetition: review material at increasing intervals (1 day, 3 days, 1 week, etc.) to strengthen memory."
+                ];
+                
+                let currentTipIndex = 0;
+                const tipsContent = document.getElementById('study-tips-content');
+                const tipNumber = document.getElementById('tip-number');
+                const nextTipBtn = document.getElementById('next-tip');
+                const closeTipsBtn = document.getElementById('close-tips');
+                const tipsPopup = document.getElementById('study-tips-popup');
+                
+                function updateTip() {
+                    tipsContent.innerHTML = `<p>${studyTips[currentTipIndex]}</p>`;
+                    tipNumber.textContent = currentTipIndex + 1;
+                }
+                
+                nextTipBtn.addEventListener('click', function() {
+                    currentTipIndex = (currentTipIndex + 1) % studyTips.length;
+                    updateTip();
+                });
+                
+                closeTipsBtn.addEventListener('click', function() {
+                    tipsPopup.style.display = 'none';
+                });
+                
+                // Show popup after 5 seconds
+                setTimeout(function() {
+                    tipsPopup.style.display = 'block';
+                }, 5000);
+            });
+        </script>
     </div>
 </body>
 </html>
