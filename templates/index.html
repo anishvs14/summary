@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Summarization Tool</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="navbar">
+        <div class="logo">
+            <img src="/static/logo.png" alt="Logo" class="icon">
+            <span>EduNavigator</span>
+        </div>
+        <div class="nav-links">
+            <a href="#">Plan</a>
+            <a href="#">AI Mentor</a>
+            <a href="#">Calendar</a>
+            <a href="#">Logout</a>
+        </div>
+    </div>
+    <div class="container">
+        <h1>AI Summarization Tool</h1>
+        <p>Upload lecture recordings, documents, or paste a YouTube URL to get AI-generated summaries and notes.</p>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <div class="upload-options">
+            <div class="option">
+                <h2>Upload File</h2>
+                <form method="POST" enctype="multipart/form-data">
+                    <input type="file" name="file" id="file" accept=".mp3,.wav,.mp4,.pdf,.txt">
+                    <button type="submit">Process File</button>
+                </form>
+                <p class="note">Supported formats: MP3, WAV, MP4, PDF, TXT</p>
+            </div>
+            
+            <div class="or-separator">OR</div>
+            
+            <div class="option">
+                <h2>YouTube URL</h2>
+                <form method="POST">
+                    <input type="text" name="video_url" placeholder="Paste YouTube URL here">
+                    <button type="submit">Process URL</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

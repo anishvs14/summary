@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Summary Results</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+<body>
+    <div class="navbar">
+        <div class="logo">
+            <img src="/static/logo.png" alt="Logo" class="icon">
+            <span>EduNavigator</span>
+        </div>
+        <div class="nav-links">
+            <a href="#">Plan</a>
+            <a href="#">AI Mentor</a>
+            <a href="#">Calendar</a>
+            <a href="#">Logout</a>
+        </div>
+    </div>
+    <div class="container">
+        <h1>Summary Results</h1>
+        <p class="source-info">Source: {{ source_type }}</p>
+        
+        <div class="results-container">
+            <div class="section">
+                <h2>Summary</h2>
+                <div class="content-box markdown-body">
+                    {{ summary | safe }}
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>Full Text</h2>
+                <div class="content-box">
+                    <textarea readonly>{{ original_text }}</textarea>
+                </div>
+            </div>
+        </div>
+        
+        <a href="{{ url_for('index') }}" class="back-button">Process Another</a>
+    </div>
+</body>
+</html>
