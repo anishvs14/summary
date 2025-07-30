@@ -4,4 +4,7 @@ google-generativeai
 assemblyai
 pytube
 PyPDF2
+streamlit
+pathlib
 requests
+youtube_transcript_api

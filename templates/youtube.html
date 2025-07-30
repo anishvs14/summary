@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>YouTube Video Summarizer</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        .form-group {
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            width: 50%;
+            font-size: 16px;
+        }
+
+        button[type="submit"] {
+            background-color: #3366ff;
+            color: white;
+            padding: 10px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .thumbnail {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .summary-card {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            margin: 30px auto;
+            width: 90%;
+            max-width: 900px;
+        }
+
+        .summary-card-header {
+            font-weight: bold;
+            font-size: 20px;
+            border-bottom: 2px solid #eee;
+            margin-bottom: 10px;
+        }
+
+        textarea {
+            width: 100%;
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 14px;
+            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+            resize: vertical;
+        }
+
+        .content-box {
+            margin-top: 30px;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        h3 {
+            text-align: center;
+            margin-top: 40px;
+            color: #333;
+        }
+
+        .alert-error {
+            background-color: #e2b5b5;
+            color: #a00;
+            padding: 10px;
+            margin: 20px auto;
+            border-radius: 6px;
+            text-align: center;
+            width: 60%;
+        }
+
+
+
+
+
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <span>
+        <span class="summarize">Summarize</span><span class="tube">Tube</span>
+        </span>
+        <div class="nav-links">
+            <a href="{{ url_for('index') }}">File Summarizer</a>
+            <a href="{{ url_for('youtube') }}">YT Vid Summarizer</a>
+        </div>
+    </div>
+
+
+    <div class="container">
+    <h2>YouTube Video Summarizer</h2>
+    <p class="note">Paste a YouTube link to generate study notes.</p>
+
+    <div class="option">
+        <h2>Enter YouTube Link</h2>
+        <form method="POST" action="{{ url_for('youtube') }}">
+            <input type="text" name="youtube_link" placeholder="https://www.youtube.com/watch?v=..." required>
+            <button type="submit">Summarize</button>
+        </form>
+        <p class="note">Supports videos with transcript access.</p>
+
+        {% if error %}
+            <div class="alert-error">{{ error }}</div>
+        {% endif %}
+
+        {% if video_id %}
+            <div class="thumbnail">
+                <img src="http://img.youtube.com/vi/{{ video_id }}/0.jpg" alt="Video Thumbnail" style="max-width: 400px; border-radius: 10px;">
+            </div>
+        {% endif %}
+
+        {% if summary %}
+            <div class="summary-card">
+                <div class="summary-card-header">Summary</div>
+                <div class="summary-card-content markdown-body">
+                    <pre>{{ summary }}</pre>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if transcript %}
+            <h3>Transcript (raw):</h3>
+            <div class="content-box">
+                <textarea readonly rows="12">{{ transcript }}</textarea>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

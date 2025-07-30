@@ -3,16 +3,26 @@ import tempfile
 from flask import Flask, render_template, request, redirect, url_for, flash
 import google.generativeai as genai
 import assemblyai as aai
-from pytube import YouTube
+import re 
 from PyPDF2 import PdfReader
-from config import GEMINI_API_KEY, ASSEMBLYAI_API_KEY
 from werkzeug.utils import secure_filename
+from dotenv import load_dotenv
+from settings import GEMINI_API_KEY, ASSEMBLYAI_API_KEY, YOUTUBE_API_KEY
+from youtube_transcript_api import YouTubeTranscriptApi
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)  # More secure random key
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB upload limit
 
-# Configure APIs
+# Load environment variables (e.g. GOOGLE_API_KEY)
+load_dotenv()
+
+# Load API keys from .env
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+ASSEMBLYAI_API_KEY = os.getenv("ASSEMBLYAI_API_KEY")
+YOUTUBE_API_KEY = os.getenv('YOUTUBE_API_KEY')
+
+# Configure the APIs with those keys
 genai.configure(api_key=GEMINI_API_KEY)
 aai.settings.api_key = ASSEMBLYAI_API_KEY
 
@@ -41,55 +51,6 @@ def extract_text_from_pdf(file_path):
         return text if text.strip() else None
     except Exception as e:
         print(f"PDF extraction error: {e}")
-        return None
-
-def get_youtube_transcript(video_url):
-    try:
-        # Create temporary directory
-        temp_dir = tempfile.mkdtemp()
-        
-        # Initialize YouTube object with better error handling
-        try:
-            yt = YouTube(video_url, 
-                        use_oauth=False,
-                        allow_oauth_cache=True)
-        except Exception as e:
-            print(f"YouTube initialization error: {e}")
-            raise Exception("Invalid YouTube URL or video not available")
-
-        # Check video availability
-        if yt.age_restricted:
-            raise Exception("Age-restricted videos cannot be processed")
-            
-        # Get best audio stream
-        audio_stream = yt.streams.filter(only_audio=True).order_by('abr').last()
-        if not audio_stream:
-            raise Exception("No audio stream available for this video")
-            
-        # Download audio to temporary file
-        temp_path = os.path.join(temp_dir, "audio.mp4")
-        audio_stream.download(output_path=temp_dir, filename="audio.mp4")
-        
-        # Verify download
-        if not os.path.exists(temp_path):
-            raise Exception("Failed to download audio")
-            
-        # Transcribe using AssemblyAI
-        text = transcribe_audio(temp_path)
-        
-        # Clean up
-        os.remove(temp_path)
-        os.rmdir(temp_dir)
-        
-        return text
-        
-    except Exception as e:
-        print(f"YouTube processing error: {str(e)}")
-        # Clean up if temp files exist
-        if 'temp_dir' in locals() and os.path.exists(temp_dir):
-            for filename in os.listdir(temp_dir):
-                os.remove(os.path.join(temp_dir, filename))
-            os.rmdir(temp_dir)
         return None
 
 def generate_summary(text):
@@ -160,27 +121,37 @@ Content to analyze:
         print(f"Summary generation error: {e}")
         return f"Summary generation failed: {str(e)}"
 
+def extract_transcript_details(youtube_video_url):
+    try:
+        # Extract video ID from various YouTube URL formats
+        import re
+        match = re.search(r"(?:v=|youtu\.be/|embed/)([A-Za-z0-9_-]{11})", youtube_video_url)
+        if not match:
+            return None
+        video_id = match.group(1)
+        transcript_text = YouTubeTranscriptApi.get_transcript(video_id)
+        transcript = " ".join([i["text"] for i in transcript_text])
+        return transcript, video_id
+    except Exception as e:
+        print(f"Transcript extraction error: {e}")
+        return None, None
+
+def generate_youtube_summary(transcript_text):
+    try:
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        prompt = (
+            "You are a YouTube video summarizer. Summarize the transcript below in detailed, clear bullet points (max 250 words):\n\n"
+            + transcript_text
+        )
+        response = model.generate_content(prompt)
+        return response.text if hasattr(response, "text") else str(response)
+    except Exception as e:
+        print(f"Gemini summary error: {e}")
+        return "Summary generation failed."
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-        # YouTube URL processing
-        if 'video_url' in request.form and request.form['video_url']:
-            video_url = request.form['video_url'].strip()
-            if not video_url.startswith(('http://', 'https://')):
-                flash('Please enter a valid URL', 'error')
-                return redirect(url_for('index'))
-                
-            text = get_youtube_transcript(video_url)
-            if not text:
-                flash('Error processing YouTube video. Please try another.', 'error')
-                return redirect(url_for('index'))
-                
-            summary = generate_summary(text)
-            return render_template('results.html', 
-                               original_text=text,
-                               summary=summary,
-                               source_type='YouTube Video')
-        
         # File upload processing
         if 'file' not in request.files:
             flash('No file selected', 'error')
@@ -242,6 +213,24 @@ def index():
             return redirect(url_for('index'))
     
     return render_template('index.html')
+
+@app.route('/youtube', methods=['GET', 'POST'])
+def youtube():
+    summary = None
+    transcript = None
+    video_id = None
+    error = None
+    if request.method == 'POST':
+        youtube_url = request.form.get('youtube_link')
+        if not youtube_url:
+            error = "Please enter a YouTube URL."
+        else:
+            transcript, video_id = extract_transcript_details(youtube_url)
+            if not transcript:
+                error = "Could not extract transcript. The video may not have captions."
+            else:
+                summary = generate_youtube_summary(transcript)
+    return render_template('youtube.html', summary=summary, transcript=transcript, video_id=video_id, error=error)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

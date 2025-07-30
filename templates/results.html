@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Summary Results</title>
-    <link rel="stylesheet" href="/static/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
@@ -255,6 +254,7 @@
         
         /* Section styling */
         .section {
+            color: #757171;
             margin-bottom: 50px;
             position: relative;
         }
@@ -559,19 +559,28 @@
                 max-width: none;
             }
         }
+
+        .summarize {
+            color: #dbf114; /* Blue or your preferred color */
+            font-weight: bold;
+        }
+
+        .tube {
+            color: #e53935; /* Red or your preferred color */
+            font-weight: bold;
+        }
+
+
     </style>
 </head>
 <body>
     <div class="navbar">
-        <div class="logo">
-            <img src="/static/logo.png" alt="Logo" class="icon">
-            <span>EduNavigator</span>
-        </div>
+        <span>
+        <span class="summarize">Summarize</span><span class="tube">Tube</span>
+        </span>
         <div class="nav-links">
-            <a href="#">Plan</a>
-            <a href="#">AI Mentor</a>
-            <a href="#">Calendar</a>
-            <a href="#">Logout</a>
+            <a href="{{ url_for('index') }}">File Summarizer</a>
+            <a href="{{ url_for('youtube') }}">YT Vid Summarizer</a>
         </div>
     </div>
     <div class="container">
