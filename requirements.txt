@@ -4,5 +4,7 @@ google-generativeai
 assemblyai
 pytube
 requests
+PyPDF2
+pathlib
 youtube_transcript_api
 gunicorn
