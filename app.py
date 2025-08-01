@@ -17,10 +17,6 @@ app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB upload limit
 # Load environment variables (e.g. GOOGLE_API_KEY)
 load_dotenv()
 
-# Load API keys from .env
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-ASSEMBLYAI_API_KEY = os.getenv("ASSEMBLYAI_API_KEY")
-YOUTUBE_API_KEY = os.getenv('YOUTUBE_API_KEY')
 
 # Configure the APIs with those keys
 genai.configure(api_key=GEMINI_API_KEY)
@@ -125,7 +121,7 @@ def extract_transcript_details(youtube_video_url):
     try:
         # Extract video ID from various YouTube URL formats
         import re
-        match = re.search(r"(?:v=|youtu\.be/|embed/)([A-Za-z0-9_-]{11})", youtube_video_url)
+        match = re.search(r"(?:v=|\/)([0-9A-Za-z_-]{11}).*", youtube_video_url)
         if not match:
             return None
         video_id = match.group(1)
