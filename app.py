@@ -119,11 +119,9 @@ Content to analyze:
 
 def extract_transcript_details(youtube_video_url):
     try:
-        # Extract video ID from various YouTube URL formats
-        import re
         match = re.search(r"(?:v=|\/)([0-9A-Za-z_-]{11}).*", youtube_video_url)
         if not match:
-            return None
+            return None, None
         video_id = match.group(1)
         transcript_text = YouTubeTranscriptApi.get_transcript(video_id)
         transcript = " ".join([i["text"] for i in transcript_text])
