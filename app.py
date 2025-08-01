@@ -123,22 +123,11 @@ def extract_transcript_details(youtube_video_url):
         import re
         match = re.search(r"(?:v=|\/)([0-9A-Za-z_-]{11}).*", youtube_video_url)
         if not match:
-            return None, None
+            return None
         video_id = match.group(1)
-        
-        # Updated method call
-        transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
-        
-        # Try fetching the English transcript first, then fall back to any available
-        try:
-            transcript = transcript_list.find_transcript(['en'])
-        except:
-            transcript = transcript_list.find_transcript(transcript_list._transcripts.keys())
-        
-        transcript_text = transcript.fetch()
-        full_text = " ".join([i["text"] for i in transcript_text])
-        return full_text, video_id
-        
+        transcript_text = YouTubeTranscriptApi.get_transcript(video_id)
+        transcript = " ".join([i["text"] for i in transcript_text])
+        return transcript, video_id
     except Exception as e:
         print(f"Transcript extraction error: {e}")
         return None, None
