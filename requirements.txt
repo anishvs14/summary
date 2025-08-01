@@ -6,5 +6,5 @@ pytube
 requests
 PyPDF2
 pathlib
-youtube-transcript-api>=0.4.1
+youtube-transcript-api>=0.6.1
 gunicorn
